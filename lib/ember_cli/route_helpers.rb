@@ -15,16 +15,21 @@ module ActionDispatch
           format: :html,
         )
 
-        scope constraints: ::EmberCli::EmberConstraint.new do
-          redirect_if_missing_trailing_slash = {
-            constraints: EmberCli::TrailingSlashConstraint.new,
-            to: redirect(-> (_, request) {
-              File.join(request.original_fullpath, "")
-            }),
-          }
+        scope constraints: ::EmberCli::EmberConstraint.new, path: to, as: "#{app_name}_ember" do
+          
+          root to: "#{routing_options[:controller]}##{routing_options[:action]}"
+          
+          # redirect_if_missing_trailing_slash = {
+          #   constraints: EmberCli::TrailingSlashConstraint.new,
+          #   to: redirect(-> (_, request) {
+          #     File.join(request.original_fullpath, "")
+          #   }),
+          # }
 
-          get(to, redirect_if_missing_trailing_slash)
-          get(File.join(to, "(*rest)"), routing_options)
+          # already introduced root. check if we can redirect from the constraint?
+          # get(to, redirect_if_missing_trailing_slash)
+          yield(routing_options) if block_given?
+          get("(*rest)", routing_options) #wildcard
         end
 
         mount_ember_assets(app_name, to: to)
